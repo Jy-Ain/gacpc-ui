@@ -12,7 +12,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-
 import { Chercheur, getChercheurs, getChercheurById } from '../api/chercheurs';
 import { Article, getArticles } from '../api/articles';
 import { Activite, getActivites } from '../api/activites';
@@ -32,10 +31,10 @@ const DashboardScreen: React.FC = () => {
   const [totalChercheurs, setTotalChercheurs] = useState(0);
   const [projetsEnCours, setProjetsEnCours] = useState(0);
   const [totalEvenements, setTotalEvenements] = useState(0);
-  const [monthlyActivity, setMonthlyActivity] = useState<number[]>([]); // Pour le graphique
+  const [monthlyActivity, setMonthlyActivity] = useState<number[]>([]);
 
-  // Simuler l'ID du chercheur connecté (à remplacer par une logique d'authentification réelle)
-  const CURRENT_USER_ID = 3; // Exemple: l'ID de "ANDRIANJAKANIAINA Mahefarivo"
+
+  const CURRENT_USER_ID = 6;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,19 +111,19 @@ const DashboardScreen: React.FC = () => {
             <Icon name="arrow-left" size={24} color="#E0E0E0" />
           </TouchableOpacity>
           <Image
-            source={{ uri: chercheurConnecte?.photo ? `http://localhost:3000/${chercheurConnecte.photo}` : 'https://via.placeholder.com/40' }}
+            source={{ uri: chercheurConnecte?.photo ? chercheurConnecte?.photo : 'https://img.freepik.com/vecteurs-libre/cercle-bleu-utilisateur-blanc_78370-4707.jpg?semt=ais_incoming&w=740&q=80' }}
             style={styles.profileImage}
           />
         </View>
         <View style={styles.headerCenter}>
-          <Text style={styles.appName}>CIDST Research Hub</Text>
+          <Text style={styles.appName}>CIDST Recherche</Text>
           <Text style={styles.welcomeText}>
             Bienvenue, {chercheurConnecte?.nom.split(' ')[0]}!
           </Text>
           <Text style={styles.dateText}>Fin prévue: 14 Oct. 2025</Text>
         </View>
         <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Profile')}>
-            <Text style={styles.profileButtonText}>Profil</Text>
+          <Text style={styles.profileButtonText}>Profil</Text>
         </TouchableOpacity>
       </View>
 
@@ -265,14 +264,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   profileButton: {
-      backgroundColor: '#282828',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 20,
+    backgroundColor: '#282828',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
   profileButtonText: {
-      color: '#E0E0E0',
-      fontSize: 14,
+    color: '#E0E0E0',
+    fontSize: 14,
   },
   navTabs: {
     flexDirection: 'row',

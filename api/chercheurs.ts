@@ -1,20 +1,19 @@
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3000';
+import { API_BASE_URL } from '@env';
 
 export interface Chercheur {
   id: number;
   nom: string;
-  photo: string;
+  specialite: string;
+  adresse_mail: string;
   sexe: string;
   annee_de_naissance: string;
   lieu_de_naissance: string;
   diplome: string;
-  specialite: string;
-  id_institution: number;
-  date_entre_administration: string;
   matricule: string;
-  adresse_mail: string;
+  date_entre_administration: string; 
+  id_institution: number;
+  photo?: string;
 }
 
 export const getChercheurs = async (): Promise<Chercheur[]> => {
@@ -27,13 +26,12 @@ export const getChercheurs = async (): Promise<Chercheur[]> => {
   }
 };
 
-
 export const getChercheurById = async (id: number): Promise<Chercheur> => {
-    try {
-      const response = await axios.get<Chercheur>(`${API_BASE_URL}/chercheurs/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Erreur lors de la récupération du chercheur avec l'ID ${id}:`, error);
-      throw error;
-    }
-  };
+  try {
+    const response = await axios.get<Chercheur>(`${API_BASE_URL}/chercheurs/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Erreur lors de la récupération du chercheur avec l'ID ${id}:`, error);
+    throw error;
+  }
+};

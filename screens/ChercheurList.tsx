@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 10,
     borderLeftWidth: 3,
-    borderLeftColor: '#4CAF50', // Couleur pour différencier les cartes
+    borderLeftColor: '#4CAF50', 
   },
   chercheurPhoto: {
     width: 60,
