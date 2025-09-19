@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
-import { Chercheur } from "../types/chercheur";
+import { Chercheur } from "../types";
 
 type Props = { chercheur: Chercheur };
 
