@@ -26,7 +26,6 @@ function App(): React.JSX.Element {
         <Stack.Screen name="Evenements" component={EvenementsScreen} />
         <Stack.Screen name="GenerateReport" component={GenerateReportScreen} />
         <Stack.Screen name="Partenaires" component={PartenairesScreen} />
-  
       </Stack.Navigator>
     </NavigationContainer>
   );
