@@ -8,7 +8,7 @@ export interface Manifestation {
   intitule: string;
   lieu: string;
   organisateur: string;
-  id_partenaires: string;
+  id_partenaires: string; 
 }
 
 export const getManifestations = async (): Promise<Manifestation[]> => {
