@@ -1,0 +1,210 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+// Import des types et API
+import { Article, getArticleById } from '../api/articles';
+import { getChercheurById } from '../api/chercheurs'; // Importez getChercheurById
+import { getInstitutionById } from '../api/institutions'; // Importez getInstitutionById
+import { RootStackParamList } from '../types/navigation';
+import { generatePdf, shareFile } from '../services/reportService';
+import { getArticleDetailHtml } from '../templates/articleDetailTemplate';
+
+type ArticleScreenRouteProp = RouteProp<RootStackParamList, 'ArticleDetail'>;
+
+// ✅ Interface pour les données enrichies avec le nom du chercheur et l'institution
+interface ArticleDetailData extends Article {
+    nomChercheur: string;
+    institutionChercheur?: string; // Peut-être optionnel si non toujours disponible
+}
+
+const ArticleScreen: React.FC = () => {
+    const navigation = useNavigation();
+    const route = useRoute<ArticleScreenRouteProp>();
+    const { articleId } = route.params;
+
+    const [article, setArticle] = useState<ArticleDetailData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [generating, setGenerating] = useState(false);
+
+    // Fonction pour charger et enrichir les données de l'article
+    useEffect(() => {
+        const loadArticleDetails = async () => {
+            if (!articleId) {
+                setLoading(false);
+                return;
+            }
+            try {
+                const fetchedArticle = await getArticleById(articleId);
+
+                let nomChercheur = 'Inconnu';
+                let institutionChercheur = 'N/A';
+                if (fetchedArticle.id_chercheur) {
+                    const chercheur = await getChercheurById(Number(fetchedArticle.id_chercheur));
+                    nomChercheur = chercheur?.nom || nomChercheur;
+
+                    if (chercheur?.id_institution) {
+                        const institution = await getInstitutionById(chercheur.id_institution);
+                        institutionChercheur = institution?.nom || institutionChercheur;
+                    }
+                }
+
+                setArticle({
+                    ...fetchedArticle,
+                    nomChercheur,
+                    institutionChercheur,
+                });
+            } catch (error) {
+                console.error("Erreur lors du chargement de l'article:", error);
+                Alert.alert("Erreur", "Impossible de charger les détails de l'article.");
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadArticleDetails();
+    }, [articleId]);
+
+    // ... (handleGeneratePdf reste inchangé, il utilise l'objet article enrichi)
+    const handleGeneratePdf = async () => {
+        if (!article) return;
+
+        setGenerating(true);
+        try {
+            const fileName = `Article_${article.id}_${article.annee}`;
+            // Le template reçoit maintenant l'objet article enrichi
+            const htmlContent = getArticleDetailHtml(article); 
+
+            const filePath = await generatePdf({ htmlContent, fileName });
+            await shareFile(filePath, 'application/pdf', `Partager l'article: ${article.titre}`);
+            
+            Alert.alert("Succès", "Le rapport PDF de l'article a été généré et est prêt à être partagé.");
+
+        } catch (error) {
+            console.error("Erreur de génération PDF:", error);
+            Alert.alert("Erreur", "Impossible de générer le rapport PDF.");
+        } finally {
+            setGenerating(false);
+        }
+    };
+
+
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#2196F3" />
+            </View>
+        );
+    }
+
+    if (!article) {
+        return (
+            <View style={styles.loadingContainer}>
+                <Text style={styles.errorText}>Article non trouvé.</Text>
+            </View>
+        );
+    }
+
+    return (
+        <View style={styles.container}>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <Icon name="arrow-left" size={24} color="#E0E0E0" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle} numberOfLines={1}>Détails de l'Article</Text>
+
+                <TouchableOpacity onPress={handleGeneratePdf} disabled={generating} style={styles.reportButton}>
+                    {generating ? (
+                        <ActivityIndicator size="small" color="#FFF" />
+                    ) : (
+                        <Icon name="share-variant" size={24} color="#E0E0E0" />
+                    )}
+                </TouchableOpacity>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+
+                <Text style={styles.title}>{article.titre}</Text>
+                <Text style={styles.subtitle}>Publié en {article.annee}</Text>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Informations Générales</Text>
+                    <DetailItem icon="file-document-outline" label="Type" value={article.type_article} />
+                    <DetailItem icon="calendar" label="Année" value={article.annee.toString()} />
+                    <DetailItem icon="identifier" label="ID" value={article.id.toString()} />
+                    <DetailItem icon="update" label="Enregistré le" value={article.date_enregistrement} />
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Auteur Principal</Text>
+                    <DetailItem icon="account-tie" label="Nom" value={article.nomChercheur} /> 
+                    {article.institutionChercheur && <DetailItem icon="bank" label="Institution" value={article.institutionChercheur} />}
+                    <DetailItem icon="badge-account-horizontal" label="Chercheur ID" value={article.id_chercheur.toString()} /> 
+                </View>
+
+            </ScrollView>
+        </View>
+    );
+};
+
+// ... (Le composant DetailItem et les styles restent inchangés)
+const DetailItem = ({ icon, label, value }: { icon: string, label: string, value: string }) => (
+    <View style={detailItemStyles.container}>
+        <Icon name={icon} size={20} color="#2196F3" style={detailItemStyles.icon} />
+        <Text style={detailItemStyles.label}>{label} :</Text>
+        <Text style={detailItemStyles.value}>{value}</Text>
+    </View>
+);
+
+const detailItemStyles = StyleSheet.create({
+    container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#282828',
+    },
+    icon: { marginRight: 10 },
+    label: { color: '#A0A0A0', fontWeight: 'bold', minWidth: 100 },
+    value: { color: '#E0E0E0', flexShrink: 1 },
+});
+
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: '#121212' },
+    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#121212' },
+    errorText: { color: '#FF6347', fontSize: 18 },
+
+    header: {
+        flexDirection: 'row', alignItems: 'center', paddingVertical: 15, paddingHorizontal: 10,
+        backgroundColor: '#1E1E1E', borderBottomWidth: 1, borderBottomColor: '#282828',
+    },
+    backButton: { marginRight: 10, padding: 5 },
+    headerTitle: { color: '#E0E0E0', fontSize: 20, fontWeight: 'bold', flex: 1, textAlign: 'center' },
+    reportButton: { marginLeft: 10, padding: 5, width: 34, height: 34, justifyContent: 'center', alignItems: 'center' },
+
+    scrollContent: { padding: 20 },
+    title: { color: '#FFF', fontSize: 24, fontWeight: 'bold', marginBottom: 5, textAlign: 'center' },
+    subtitle: { color: '#A0A0A0', fontSize: 16, marginBottom: 20, textAlign: 'center' },
+
+    section: {
+        backgroundColor: '#1E1E1E',
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 20,
+        borderLeftWidth: 4,
+        borderLeftColor: '#FFC107'
+    },
+    sectionTitle: {
+        color: '#FFC107',
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#282828',
+        paddingBottom: 5
+    },
+    bodyText: { color: '#E0E0E0', fontSize: 15, lineHeight: 22 },
+});
+
+export default ArticleScreen;

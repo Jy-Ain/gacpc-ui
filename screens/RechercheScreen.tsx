@@ -1,3 +1,5 @@
+// src/screens/RechercheScreen.tsx (COMPLET ET CORRIGÉ)
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -22,7 +24,6 @@ import { Institution, getInstitutions } from '../api/institutions';
 
 // Import des composants
 import FilterModal from '../components/FilterModal';
-// ✅ Import du composant stabilisé
 import QuickFilters from '../components/QuickFilters';
 
 type RechercheScreenNavigationProp = NavigationProp<RootStackParamList, 'Recherche'>;
@@ -239,6 +240,7 @@ const RechercheScreen: React.FC = () => {
   );
 
   const renderArticleItem = (item: Article) => (
+    // ✅ NAVIGATION VERS LE NOUVEL ÉCRAN ARTICLE
     <TouchableOpacity
       key={item.id}
       style={[styles.resultCard, styles.articleCard]}
@@ -253,6 +255,7 @@ const RechercheScreen: React.FC = () => {
   );
 
   const renderActiviteItem = (item: Activite) => (
+    // ✅ NAVIGATION VERS LE NOUVEL ÉCRAN ACTIVITÉ
     <TouchableOpacity
       key={item.ID}
       style={[styles.resultCard, styles.activiteCard]}
@@ -403,9 +406,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   filterButtonText: { color: '#FFF', fontSize: 14, fontWeight: 'bold' },
-
-  // Suppression des styles quickFiltersContainer, quickFilterButton, etc. 
-  // Ils sont maintenant dans QuickFilters.tsx
 
   filterCountText: {
     color: '#A0A0A0', fontSize: 14, textAlign: 'center', marginTop: 10, marginBottom: 10,

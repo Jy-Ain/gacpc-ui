@@ -74,3 +74,13 @@ export const deleteArticle = async (id: number): Promise<void> => {
     throw error;
   }
 };
+
+export const getPublicationsByChercheurId = async (chercheurId: number | string): Promise<Article[]> => {
+  try {
+    const response = await API.get(`/articles?id_chercheur=${chercheurId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Erreur lors de la récupération des publications du chercheur ${chercheurId}:`, error);
+    throw error;
+  }
+};

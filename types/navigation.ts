@@ -8,7 +8,7 @@ export type RootStackParamList = {
   Profile: { chercheurId: number };
   ArticleDetail: { articleId: number };
   ActiviteDetail: { activiteId: number };
-
+  
   CreatePublication: undefined;
   CreateChercheur: undefined;
   CreateActivite: undefined;
@@ -16,4 +16,5 @@ export type RootStackParamList = {
   CreatePartenaire: undefined;
   CreateArticle: undefined;
   CreateManifestation: undefined;
+  
 };

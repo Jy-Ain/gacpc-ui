@@ -8,15 +8,15 @@ const API = axios.create({
 export interface Activite {
   ID: number;
   type_activites: string;
-  annee: number; 
+  annee: number;
   duree: string;
   intitule: string;
-  id_institution: number; 
+  id_institution: number;
   departement: string;
-  id_chercheur: number; 
+  id_chercheur: number;
   thematique: string;
   objectifs_global: string;
-  id_partenaires: number; 
+  id_partenaires: number;
 }
 
 export type CreateActiviteRequestData = Omit<Activite, 'ID'>;
@@ -76,6 +76,16 @@ export const deleteActivite = async (id: number): Promise<void> => {
     await API.delete(`/activites/${id}`);
   } catch (error) {
     console.error(`Erreur lors de la suppression de l'activité avec l'ID ${id}:`, error);
+    throw error;
+  }
+};
+
+export const getActivitesByChercheurId = async (chercheurId: number | string): Promise<Activite[]> => {
+  try {
+    const response = await API.get(`/activites?id_chercheur=${chercheurId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Erreur lors de la récupération des activités du chercheur ${chercheurId}:`, error);
     throw error;
   }
 };

@@ -1,3 +1,8 @@
+// [AJOUTER ICI]
+import ArticleScreen from './screens/ArticleScreen';
+import ActiviteScreen from './screens/ActiviteScreen';
+// [FIN AJOUT]
+
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -9,6 +14,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import EvenementsScreen from './screens/EvenementsScreen';
 import GenerateReportScreen from './screens/GenerateReportScreen';
 import PartenairesScreen from './screens/PartenairesScreen';
+
 
 // Nouveaux écrans de création
 import CreatePartenaireScreen from './screens/CreatePartenaireScreen';
@@ -27,10 +33,18 @@ function App(): React.JSX.Element {
       <Stack.Navigator initialRouteName="Dashboard" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Dashboard" component={DashboardScreen} />
         <Stack.Screen name="Recherche" component={RechercheScreen} />
+        
+        {/* ÉCRANS DE DÉTAILS EXISTANTS ET NOUVEAUX */}
         <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="ArticleDetail" component={ArticleScreen} />  
+        <Stack.Screen name="ActiviteDetail" component={ActiviteScreen} /> 
+        
+        {/* AUTRES ÉCRANS */}
         <Stack.Screen name="Evenements" component={EvenementsScreen} />
         <Stack.Screen name="GenerateReport" component={GenerateReportScreen} />
         <Stack.Screen name="Partenaires" component={PartenairesScreen} />
+        
+        {/* ÉCRANS DE CRÉATION */}
         <Stack.Screen name="CreatePartenaire" component={CreatePartenaireScreen} />
         <Stack.Screen name="CreateChercheur" component={CreateChercheurScreen} />
         <Stack.Screen name="CreatePublication" component={CreateArticleScreen} />
