@@ -9,6 +9,9 @@ import {
     Image,
     TouchableOpacity,
     Alert,
+    // AJOUT: Importation des modules nécessaires pour la gestion des permissions Android
+    PermissionsAndroid,
+    Platform,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -21,17 +24,10 @@ import { RootStackParamList } from '../types/navigation';
 import { Chercheur, getChercheurById } from '../api/chercheurs';
 import { Institution, getInstitutions } from '../api/institutions';
 
-// ✅ CORRECTION : Ces fonctions sont maintenant exportées dans vos fichiers api/articles.ts et api/activites.ts
 import { getPublicationsByChercheurId } from '../api/articles';
 import { getActivitesByChercheurId } from '../api/activites';
 
-// ✅ CORRECTION : Import direct de la fonction 'convert' pour react-native-html-to-pdf
-// Si cette ligne cause encore "Module has no default export", utilisez:
-// import * as RNHTMLtoPDF from 'react-native-html-to-pdf';
-// Et dans generatePdf, changez l'appel à: await (RNHTMLtoPDF as any).convert(options);
-// Pour la robustesse des types, je laisse la version "as any" directement dans reportService.ts,
-// donc ici on importe juste les fonctions finales du service.
-import { generatePdf, shareFile } from '../services/reportService';
+import { generatePdf } from '../services/reportService';
 import { getChercheurProfileHtml } from '../templates/chercheurProfileTemplate';
 
 
@@ -43,17 +39,15 @@ const ProfileScreen: React.FC = () => {
     const route = useRoute<ProfileScreenRouteProp>();
 
     // Le chercheur ID est soit dans les params, soit l'utilisateur courant (CURRENT_USER_ID)
-    // route.params?.chercheurId peut être 'undefined' ou un 'number'
     const routeChercheurId = route.params?.chercheurId;
 
-    // Convertit CURRENT_USER_ID en string si ce n'est pas déjà le cas (car les variables d'environnement sont souvent des strings)
+    // Convertit CURRENT_USER_ID en string si ce n'est pas déjà le cas
     const currentUserIdAsString = String(CURRENT_USER_ID);
 
-    // ✅ CORRECTION DE L'ERREUR DE COMPARAISON : On s'assure que les deux sont des strings pour la comparaison stricte
+    // On s'assure que les deux sont des strings pour la comparaison stricte
     const isCurrentUserProfile = !routeChercheurId || routeChercheurId.toString() === currentUserIdAsString;
     
-    // L'ID réel à charger pour le profil. Si routeChercheurId est défini, on l'utilise, sinon c'est l'utilisateur courant.
-    // targetChercheurId est soit number (si routeChercheurId est défini), soit string (si CURRENT_USER_ID est utilisé).
+    // L'ID réel à charger pour le profil.
     const targetChercheurId = routeChercheurId || currentUserIdAsString;
 
 
@@ -92,8 +86,6 @@ const ProfileScreen: React.FC = () => {
                 
                 // 3. Récupérer les données liées (Publications et Activités)
                 if (chercheurData) {
-                    // Les IDs de chercheur sont souvent des numbers dans les APIs, assurez-vous de la conversion
-                    // Caster targetChercheurId en number car les fonctions d'API le nécessitent probablement
                     const numId = parseInt(String(targetChercheurId), 10); 
                     const pubs = await getPublicationsByChercheurId(numId);
                     const acts = await getActivitesByChercheurId(numId);
@@ -111,10 +103,52 @@ const ProfileScreen: React.FC = () => {
 
         fetchProfileData();
     }, [targetChercheurId]); // Dépend de l'ID pour recharger si on navigue vers un autre chercheur
+    
+    
+    /**
+     * Demande la permission d'écriture sur le stockage externe pour Android.
+     * @returns {Promise<boolean>} Vrai si la permission est accordée.
+     */
+    const requestStoragePermission = async (): Promise<boolean> => {
+        if (Platform.OS !== 'android') {
+            return true; // Non nécessaire sur iOS
+        }
+
+        try {
+            // Sur les versions modernes (>= Android 13), cette permission pourrait ne pas être nécessaire 
+            // ou être remplacée par d'autres, mais elle reste la plus sûre pour cibler les dossiers publics pour la rétrocompatibilité.
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+                {
+                    title: "Permission d'Accès au Stockage",
+                    message: "Cette application a besoin d'accéder à votre stockage pour sauvegarder le fichier PDF.",
+                    buttonNeutral: "Demander plus tard",
+                    buttonNegative: "Annuler",
+                    buttonPositive: "OK"
+                }
+            );
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                return true;
+            } else {
+                Alert.alert("Permission refusée", "Impossible de sauvegarder le PDF. Veuillez accorder la permission d'accès au stockage.");
+                return false;
+            }
+        } catch (err) {
+            console.warn(err);
+            return false;
+        }
+    };
+
 
     const handleGeneratePdf = async () => {
         if (!chercheur || !institution) {
             Alert.alert("Erreur", "Données du chercheur incomplètes pour la génération du PDF.");
+            return;
+        }
+
+        // Étape 1: Vérifier et demander la permission (Android seulement)
+        const hasPermission = await requestStoragePermission();
+        if (!hasPermission) {
             return;
         }
 
@@ -129,16 +163,22 @@ const ProfileScreen: React.FC = () => {
             };
 
             const htmlContent = getChercheurProfileHtml(chercheurWithDetails);
-            const fileName = `Profil_Chercheur_${chercheur.nom.replace(/\s/g, '_')}_${new Date().toISOString().substring(0, 10)}`;
+            // Assurez-vous que le nom de fichier ne contient pas de caractères spéciaux pour le chemin d'accès
+            const safeFileName = `Profil_Chercheur_${chercheur.nom.replace(/\s/g, '_').replace(/[^a-zA-Z0-9_]/g, '')}_${new Date().toISOString().substring(0, 10)}`;
 
-            const filePath = await generatePdf({ htmlContent, fileName });
-            await shareFile(filePath, 'application/pdf', `Partager le profil de ${chercheur.nom}`);
+            const filePath = await generatePdf({ htmlContent, fileName: safeFileName });
             
-            Alert.alert("Succès", "Le PDF a été généré et est prêt à être partagé.");
+            // Le message indique le chemin simple que nous avons forcé dans reportService.ts
+            Alert.alert(
+                "Succès", 
+                `Le PDF a été généré et sauvegardé dans le dossier 'gacp' de votre stockage principal.\n\nChemin: ${filePath}`
+            );
 
-        } catch (err) {
-            console.error('Erreur lors de la génération ou du partage du PDF:', err);
-            Alert.alert("Erreur", "Une erreur est survenue lors de la génération du PDF.");
+        } catch (err: any) {
+            // Afficher le message d'erreur plus détaillé du service
+            const errorMessage = err.message || "Une erreur inconnue est survenue lors de la génération du PDF.";
+            console.error('Erreur lors de la génération du PDF:', err);
+            Alert.alert("Erreur", errorMessage);
         } finally {
             setGeneratingPdf(false);
         }
@@ -146,6 +186,7 @@ const ProfileScreen: React.FC = () => {
 
 
     if (loading) {
+        // ... (contenu inchangé)
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#2196F3" />
@@ -155,6 +196,7 @@ const ProfileScreen: React.FC = () => {
     }
 
     if (error) {
+        // ... (contenu inchangé)
         return (
             <View style={styles.errorContainer}>
                 <Icon name="alert-circle-outline" size={50} color="#FF6347" />
@@ -167,6 +209,7 @@ const ProfileScreen: React.FC = () => {
     }
 
     if (!chercheur) {
+        // ... (contenu inchangé)
         return (
             <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>Aucun profil trouvé pour cet utilisateur.</Text>

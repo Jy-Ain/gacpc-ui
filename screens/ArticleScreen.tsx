@@ -1,22 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    ScrollView,
+    ActivityIndicator,
+    Alert,
+    TouchableOpacity,
+    PermissionsAndroid,
+    Platform,
+} from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Import des types et API
 import { Article, getArticleById } from '../api/articles';
-import { getChercheurById } from '../api/chercheurs'; // Importez getChercheurById
-import { getInstitutionById } from '../api/institutions'; // Importez getInstitutionById
+import { getChercheurById } from '../api/chercheurs';
+import { getInstitutionById } from '../api/institutions';
 import { RootStackParamList } from '../types/navigation';
-import { generatePdf, shareFile } from '../services/reportService';
+// MODIF : Retrait de shareFile
+import { generatePdf } from '../services/reportService';
 import { getArticleDetailHtml } from '../templates/articleDetailTemplate';
 
 type ArticleScreenRouteProp = RouteProp<RootStackParamList, 'ArticleDetail'>;
 
-// ✅ Interface pour les données enrichies avec le nom du chercheur et l'institution
 interface ArticleDetailData extends Article {
     nomChercheur: string;
-    institutionChercheur?: string; // Peut-être optionnel si non toujours disponible
+    institutionChercheur?: string;
 }
 
 const ArticleScreen: React.FC = () => {
@@ -65,25 +75,71 @@ const ArticleScreen: React.FC = () => {
         loadArticleDetails();
     }, [articleId]);
 
-    // ... (handleGeneratePdf reste inchangé, il utilise l'objet article enrichi)
+    /**
+     * Demande la permission d'écriture sur le stockage externe pour Android.
+     * @returns {Promise<boolean>} Vrai si la permission est accordée.
+     */
+    const requestStoragePermission = async (): Promise<boolean> => {
+        if (Platform.OS !== 'android') {
+            return true; // Non nécessaire sur iOS
+        }
+
+        try {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+                {
+                    title: "Permission d'Accès au Stockage",
+                    message: "Cette application a besoin d'accéder à votre stockage pour sauvegarder le fichier PDF.",
+                    buttonNeutral: "Demander plus tard",
+                    buttonNegative: "Annuler",
+                    buttonPositive: "OK"
+                }
+            );
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                return true;
+            } else {
+                Alert.alert("Permission refusée", "Impossible de sauvegarder le PDF. Veuillez accorder la permission d'accès au stockage.");
+                return false;
+            }
+        } catch (err) {
+            console.warn(err);
+            return false;
+        }
+    };
+
+
     const handleGeneratePdf = async () => {
         if (!article) return;
 
+        // Étape 1: Vérifier et demander la permission (Android seulement)
+        const hasPermission = await requestStoragePermission();
+        if (!hasPermission) {
+            return;
+        }
+
         setGenerating(true);
         try {
-            const fileName = `Article_${article.id}_${article.annee}`;
+            // Assurez-vous que le nom de fichier ne contient pas de caractères spéciaux
+            const safeFileName = `Article_${article.id}_${article.annee}`.replace(/\s/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+
             // Le template reçoit maintenant l'objet article enrichi
-            const htmlContent = getArticleDetailHtml(article); 
+            const htmlContent = getArticleDetailHtml(article);
 
-            const filePath = await generatePdf({ htmlContent, fileName });
-            await shareFile(filePath, 'application/pdf', `Partager l'article: ${article.titre}`);
-            
-            Alert.alert("Succès", "Le rapport PDF de l'article a été généré et est prêt à être partagé.");
+            // generatePdf utilise le chemin /Download/gacp/
+            const filePath = await generatePdf({ htmlContent, fileName: safeFileName });
 
-        } catch (error) {
-            console.error("Erreur de génération PDF:", error);
-            Alert.alert("Erreur", "Impossible de générer le rapport PDF.");
+            // MODIF : Confirmation de la sauvegarde et affichage du chemin
+            Alert.alert(
+                "Succès",
+                `Le PDF a été généré et sauvegardé dans le dossier 'gacp' de votre dossier Téléchargements.\n\nChemin: ${filePath}`
+            );
+
+        } catch (err: any) {
+            console.error("Erreur de génération PDF:", err);
+            const errorMessage = err.message || "Impossible de générer le rapport PDF.";
+            Alert.alert("Erreur", errorMessage);
         } finally {
+            // ARRÊT : On ne partage plus après la génération
             setGenerating(false);
         }
     };
@@ -113,11 +169,15 @@ const ArticleScreen: React.FC = () => {
                 </TouchableOpacity>
                 <Text style={styles.headerTitle} numberOfLines={1}>Détails de l'Article</Text>
 
-                <TouchableOpacity onPress={handleGeneratePdf} disabled={generating} style={styles.reportButton}>
+                <TouchableOpacity
+                    onPress={handleGeneratePdf}
+                    disabled={generating}
+                    style={styles.reportButton}
+                >
                     {generating ? (
                         <ActivityIndicator size="small" color="#FFF" />
                     ) : (
-                        <Icon name="share-variant" size={24} color="#E0E0E0" />
+                        <Icon name="file-pdf-box" size={24} color="#E0E0E0" />
                     )}
                 </TouchableOpacity>
             </View>
@@ -137,9 +197,9 @@ const ArticleScreen: React.FC = () => {
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Auteur Principal</Text>
-                    <DetailItem icon="account-tie" label="Nom" value={article.nomChercheur} /> 
+                    <DetailItem icon="account-tie" label="Nom" value={article.nomChercheur} />
                     {article.institutionChercheur && <DetailItem icon="bank" label="Institution" value={article.institutionChercheur} />}
-                    <DetailItem icon="badge-account-horizontal" label="Chercheur ID" value={article.id_chercheur.toString()} /> 
+                    <DetailItem icon="badge-account-horizontal" label="Chercheur ID" value={article.id_chercheur.toString()} />
                 </View>
 
             </ScrollView>
@@ -150,7 +210,7 @@ const ArticleScreen: React.FC = () => {
 // ... (Le composant DetailItem et les styles restent inchangés)
 const DetailItem = ({ icon, label, value }: { icon: string, label: string, value: string }) => (
     <View style={detailItemStyles.container}>
-        <Icon name={icon} size={20} color="#2196F3" style={detailItemStyles.icon} />
+        <Icon name={icon} size={20} color="#FFC107" style={detailItemStyles.icon} />
         <Text style={detailItemStyles.label}>{label} :</Text>
         <Text style={detailItemStyles.value}>{value}</Text>
     </View>
@@ -181,7 +241,16 @@ const styles = StyleSheet.create({
     },
     backButton: { marginRight: 10, padding: 5 },
     headerTitle: { color: '#E0E0E0', fontSize: 20, fontWeight: 'bold', flex: 1, textAlign: 'center' },
-    reportButton: { marginLeft: 10, padding: 5, width: 34, height: 34, justifyContent: 'center', alignItems: 'center' },
+    reportButton: {
+        marginLeft: 10,
+        padding: 8,
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#FF6347', 
+        borderRadius: 5,
+    },
 
     scrollContent: { padding: 20 },
     title: { color: '#FFF', fontSize: 24, fontWeight: 'bold', marginBottom: 5, textAlign: 'center' },

@@ -1,20 +1,16 @@
 export type RootStackParamList = {
   Dashboard: undefined;
-  Evenements: undefined;
-  Partenaires: undefined;
   Recherche: undefined;
+  Evenements: undefined;
   GenerateReport: undefined;
-
+  Partenaires: undefined;
+  ArticleDetail: { articleId: string };
+  ActiviteDetail: { activiteId: string };
   Profile: { chercheurId: number };
-  ArticleDetail: { articleId: number };
-  ActiviteDetail: { activiteId: number };
-  
-  CreatePublication: undefined;
+
+  CreatePartenaire: undefined;
   CreateChercheur: undefined;
+  CreatePublication: undefined;
   CreateActivite: undefined;
   CreateEvenement: undefined;
-  CreatePartenaire: undefined;
-  CreateArticle: undefined;
-  CreateManifestation: undefined;
-  
 };

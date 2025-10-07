@@ -1,4 +1,3 @@
-// src/screens/ActiviteScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -8,7 +7,7 @@ import { Activite, getActiviteById } from '../api/activites';
 import { getChercheurById, Chercheur } from '../api/chercheurs';
 import { getInstitutionById, Institution } from '../api/institutions';
 import { RootStackParamList } from '../types/navigation';
-import { generatePdf, shareFile } from '../services/reportService';
+import { generatePdf } from '../services/reportService';
 import { getActiviteDetailHtml } from '../templates/activiteDetailTemplate'; 
 
 type ActiviteScreenRouteProp = RouteProp<RootStackParamList, 'ActiviteDetail'>;
@@ -35,7 +34,7 @@ const ActiviteScreen: React.FC = () => {
                 return;
             }
             try {
-                const fetchedActivite = await getActiviteById(activiteId); // Assurez-vous d'avoir cette fonction
+                const fetchedActivite = await getActiviteById(activiteId); 
                 
                 // Récupérer les détails du chercheur responsable
                 let nomChercheur = 'Inconnu';
@@ -65,7 +64,7 @@ const ActiviteScreen: React.FC = () => {
         loadActiviteDetails();
     }, [activiteId]);
 
-    // Fonction de génération et de partage du PDF
+    // Fonction de génération du PDF (exportation locale uniquement)
     const handleGeneratePdf = async () => {
         if (!activite) return;
 
@@ -75,10 +74,11 @@ const ActiviteScreen: React.FC = () => {
             // Utiliser le template HTML pour générer le contenu
             const htmlContent = getActiviteDetailHtml(activite);
 
+            // Génération du PDF
             const filePath = await generatePdf({ htmlContent, fileName });
-            await shareFile(filePath, 'application/pdf', `Partager l'activité: ${activite.intitule}`);
             
-            Alert.alert("Succès", "Le rapport PDF de l'activité a été généré et est prêt à être partagé.");
+            // Message de succès pour l'exportation/sauvegarde locale
+            Alert.alert("Succès", `Le rapport PDF de l'activité a été généré et sauvegardé sous : ${filePath}`);
 
         } catch (error) {
             console.error("Erreur de génération PDF:", error);
@@ -117,7 +117,8 @@ const ActiviteScreen: React.FC = () => {
                     {generating ? (
                         <ActivityIndicator size="small" color="#FFF" />
                     ) : (
-                        <Icon name="share-variant" size={24} color="#E0E0E0" />
+                        
+                        <Icon name="file-pdf-box" size={24} color="#E0E0E0" /> 
                     )}
                 </TouchableOpacity>
             </View>
@@ -181,7 +182,7 @@ const styles = StyleSheet.create({
     },
     backButton: { marginRight: 10, padding: 5 },
     headerTitle: { color: '#E0E0E0', fontSize: 20, fontWeight: 'bold', flex: 1, textAlign: 'center' },
-    reportButton: { marginLeft: 10, padding: 5, width: 34, height: 34, justifyContent: 'center', alignItems: 'center' },
+    reportButton: { backgroundColor:'#FF6347', borderRadius: 5,marginLeft: 10, padding: 5, width: 34, height: 34, justifyContent: 'center', alignItems: 'center' },
 
     scrollContent: { padding: 20 },
     title: { color: '#FFF', fontSize: 24, fontWeight: 'bold', marginBottom: 5, textAlign: 'center' },

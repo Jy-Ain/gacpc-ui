@@ -1,16 +1,12 @@
-// src/templates/activiteDetailTemplate.ts
+import { logoBase64 } from '../types/base64files';
 import { Activite } from '../api/activites';
 
-// Vous pouvez enrichir l'Activité avec le nom de l'auteur principal
 interface ActiviteDetail extends Activite {
     nomChercheur: string;
-    institutionChercheur?: string; // Si disponible
+    institutionChercheur?: string;
 }
 
 export const getActiviteDetailHtml = (activite: ActiviteDetail, isReport = true): string => {
-    // IMPORTANT : Remplacez par votre logo encodé en Base64
-    // NOTE: Ceci doit être une chaîne de caractères Base64 valide pour que le logo s'affiche dans le PDF.
-    const logoBase64 = 'data:image/png;base64,...'; 
     const dateGenerated = new Date().toLocaleDateString();
     
 

@@ -31,7 +31,7 @@ type DashboardScreenNavigationProp = NativeStackNavigationProp<
     'Dashboard'
 >;
 
-const CHART_HEIGHT = 100; // Hauteur de référence pour le graphique
+const CHART_HEIGHT = 100;
 
 const DashboardScreen: React.FC = () => {
     const navigation = useNavigation<DashboardScreenNavigationProp>();
@@ -160,7 +160,7 @@ const DashboardScreen: React.FC = () => {
                 <Text style={styles.sectionTitle}>Accès Rapide</Text>
                 <View style={styles.quickAccessContainer}>
                     <QuickAccessButton iconName="calendar-clock" label="Mes Événements" onPress={() => navigation.navigate('Evenements')} />
-                    <QuickAccessButton iconName="file-chart" label="Générer Rapport" onPress={() => navigation.navigate('GenerateReport')} />
+                    <QuickAccessButton iconName="file-chart" label="Exporté des fichiers en csv" onPress={() => navigation.navigate('GenerateReport')} />
                     <QuickAccessButton iconName="sync" label="Synchroniser" onPress={() => console.log('Synchroniser')} />
                     <QuickAccessButton iconName="account-multiple" label="Partenaires" onPress={() => navigation.navigate('Partenaires')} />
                 </View>

@@ -1,16 +1,12 @@
-// src/templates/activiteListTemplate.ts
+import { logoBase64 } from '../types/base64files';
 import { Activite } from '../api/activites';
 import { Chercheur } from '../api/chercheurs';
 
-// Définition d'un type enrichi si nécessaire
 interface ActiviteListItem extends Activite {
-    // Si vous enrichissez les données, vous pouvez ajouter le nom de l'auteur ici
     chercheur?: Chercheur;
 }
 
 export const getActiviteListHtml = (activites: ActiviteListItem[], title: string = "Rapport des Activités de Recherche"): string => {
-    // IMPORTANT : Remplacez par votre logo encodé en Base64
-    const logoBase64 = 'data:image/png;base64,...'; 
     const dateGenerated = new Date().toLocaleDateString();
 
     const tableRows = activites.map(activite => `

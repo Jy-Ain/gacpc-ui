@@ -1,10 +1,8 @@
-// src/templates/chercheurListTemplate.ts
+import { logoBase64 } from '../types/base64files';
 import { Chercheur } from '../api/chercheurs';
-import { Institution } from '../api/institutions'; // Pour le nom de l'institution
+import { Institution } from '../api/institutions'; 
 
 export const getChercheurListHtml = (chercheurs: Chercheur[], institutions: Institution[], yearRange?: [number, number]): string => {
-    const logoBase64 = 'data:image/png;base64,...'; // Votre logo CIDST
-
     const getInstitutionName = (id: number | undefined) => {
         if (!id) return 'N/A';
         return institutions.find(inst => inst.idPrimaire === id)?.nom || 'N/A';

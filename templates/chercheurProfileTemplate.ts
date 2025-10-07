@@ -1,10 +1,9 @@
-// src/templates/chercheurProfileTemplate.ts
 import { Chercheur } from '../api/chercheurs';
 import { Article } from '../api/articles';
 import { Activite } from '../api/activites';
 import { Institution } from '../api/institutions';
+import { logoBase64 } from '../types/base64files';
 
-// TODO: Assurez-vous d'ajouter 'description?: string;' à votre type Chercheur dans '../api/chercheurs'
 interface ChercheurWithDetails extends Chercheur {
     institution?: Institution; 
     publications?: Article[];
@@ -12,8 +11,6 @@ interface ChercheurWithDetails extends Chercheur {
 }
 
 export const getChercheurProfileHtml = (chercheur: ChercheurWithDetails): string => {
-    // URL du logo du CIDST (soit une URL web, soit un base64)
-    const logoBase64 = 'data:image/png;base64,...'; 
     const defaultPhoto = 'https://img.freepik.com/vecteurs-libre/cercle-bleu-utilisateur-blanc_78370-4707.jpg';
 
     const publicationsHtml = chercheur.publications && chercheur.publications.length > 0

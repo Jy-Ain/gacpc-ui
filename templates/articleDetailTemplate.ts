@@ -1,19 +1,12 @@
-// src/templates/articleDetailTemplate.ts
-import { Article } from '../api/articles'; // Assurez-vous d'importer le type Article
+import { logoBase64 } from '../types/base64files';
+import { Article } from '../api/articles'; 
 import { Chercheur } from '../api/chercheurs';
 
-// TODO: Remplacer AuthorDetails par les vrais types de votre API
 interface ArticleWithAuthors extends Article {
-    authorsDetails?: Chercheur[]; // Les détails complets des auteurs
-    // Si vous prévoyez d'ajouter 'resume' et 'doi' à votre API, décommentez ceci :
-    // resume?: string;
-    // doi?: string;
+    authorsDetails?: Chercheur[]; 
 }
 
 export const getArticleDetailHtml = (article: ArticleWithAuthors): string => {
-    // IMPORTANT : Remplacez par votre logo encodé en Base64
-    const logoBase64 = 'data:image/png;base64,...'; 
-
     const authorsHtml = article.authorsDetails && article.authorsDetails.length > 0
         ? `
         <div class="section">
@@ -25,12 +18,9 @@ export const getArticleDetailHtml = (article: ArticleWithAuthors): string => {
         `
         : `<p>Auteurs non spécifiés.</p>`;
 
-    // --- CORRECTION DES ERREURS DE PROPRIÉTÉS MANQUANTES ---
-    // Utilisation des propriétés existantes :
     const articleId = article.id || 'N/A';
     const articleDate = article.date_enregistrement ? new Date(article.date_enregistrement).toLocaleDateString() : 'N/A';
     
-    // Remplacement du 'resume' par une note générique ou un champ existant si pertinent
     const articleDetails = `ID Enregistrement: ${articleId}. Date: ${articleDate}`;
 
     return `

@@ -1,17 +1,12 @@
-// src/templates/articleListTemplate.ts
+import { logoBase64 } from '../types/base64files';
 import { Article } from '../api/articles';
-// Importez le type Chercheur si vous avez besoin d'afficher le nom de l'auteur principal
 import { Chercheur } from '../api/chercheurs'; 
 
-// Définition d'un type enrichi si nécessaire, sinon utilisez Article[]
 interface ArticleListItem extends Article {
-    // Si vous enrichissez les données, vous pouvez ajouter l'auteur principal ici
     chercheurPrincipal?: Chercheur;
 }
 
 export const getArticleListHtml = (articles: ArticleListItem[], title: string = "Rapport des Articles"): string => {
-    // IMPORTANT : Remplacez par votre logo encodé en Base64
-    const logoBase64 = 'data:image/png;base64,...'; 
     const dateGenerated = new Date().toLocaleDateString();
 
     const tableRows = articles.map(article => `
