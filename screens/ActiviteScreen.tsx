@@ -34,7 +34,7 @@ const ActiviteScreen: React.FC = () => {
                 return;
             }
             try {
-                const fetchedActivite = await getActiviteById(activiteId); 
+                const fetchedActivite = await getActiviteById(Number(activiteId)); 
                 
                 // Récupérer les détails du chercheur responsable
                 let nomChercheur = 'Inconnu';

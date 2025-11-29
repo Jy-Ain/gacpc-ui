@@ -46,7 +46,7 @@ const ArticleScreen: React.FC = () => {
                 return;
             }
             try {
-                const fetchedArticle = await getArticleById(articleId);
+                const fetchedArticle = await getArticleById(Number(articleId));
 
                 let nomChercheur = 'Inconnu';
                 let institutionChercheur = 'N/A';

@@ -25,6 +25,7 @@ import AddActionsModal from '../components/AddActionsModal';
 import { RootStackParamList } from '../types/navigation';
 
 import { CURRENT_USER_ID } from '@env';
+import { logoBase64 } from '../types/base64files';
 
 type DashboardScreenNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -92,10 +93,10 @@ const DashboardScreen: React.FC = () => {
             <ScrollView style={styles.container}>
                 {/* Header Section */}
                 <View style={styles.header}>
-                    <View style={styles.headerLeft}>
+                    <View style={styles.logocontainer}>
                         <Image
-                            source={{ uri: chercheurConnecte?.photo ? chercheurConnecte.photo : 'https://img.freepik.com/vecteurs-libre/cercle-bleu-utilisateur-blanc_78370-4707.jpg' }}
-                            style={styles.profileImage}
+                            source={{ uri: logoBase64 }}
+                            style={styles.logoImage}
                         />
                     </View>
                     <View style={styles.headerCenter}>
@@ -105,9 +106,12 @@ const DashboardScreen: React.FC = () => {
                         </Text>
                         <Text style={styles.dateText}>Fin prévue: 14 Oct. 2025</Text>
                     </View>
-                    <TouchableOpacity style={styles.notificationButton} onPress={() => console.log('Notifications')}>
-                        <Icon name="bell-outline" size={24} color="#E0E0E0" />
-                    </TouchableOpacity>
+                    <View style={styles.headerLeft}>
+                        <Image
+                            source={{ uri: chercheurConnecte?.photo ? chercheurConnecte.photo : 'https://img.freepik.com/vecteurs-libre/cercle-bleu-utilisateur-blanc_78370-4707.jpg' }}
+                            style={styles.profileImage}
+                        />
+                    </View>
                 </View>
 
                 {/* Navigation Tabs */}
@@ -182,6 +186,8 @@ const styles = StyleSheet.create({
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#121212' },
     loadingText: { color: '#E0E0E0', marginTop: 10, fontSize: 16 },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, paddingHorizontal: 5, borderBottomWidth: 1, borderBottomColor: '#282828' },
+    logocontainer: { flexDirection: 'row', alignItems: 'center' , borderRadius: 5, overflow: 'hidden', borderWidth: 1, borderColor: '#2196F3' },
+    logoImage: { width: 50, height: 50, resizeMode: 'contain' },
     headerLeft: { flexDirection: 'row', alignItems: 'center' },
     profileImage: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#333', marginRight: 10, borderWidth: 1, borderColor: '#2196F3' },
     headerCenter: { flex: 1, marginLeft: 10 },
